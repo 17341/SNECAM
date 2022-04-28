@@ -1,10 +1,8 @@
 import React from 'react'
 import { View, Text, Button } from 'react-native'
-import { useNavigation } from '@react-navigation/core'
 import useAuth from '../hooks/useAuth'
 
 const HomeScreen = () => {
-    const navigation = useNavigation();
     const { logOut } = useAuth();
 
     return (

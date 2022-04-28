@@ -1,8 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import * as Google from "expo-google-app-auth";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithCredential, signOut } from "@firebase/auth";
+import {
+    GoogleAuthProvider,
+    onAuthStateChanged,
+    signInWithCredential,
+    signOut,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
+} from "@firebase/auth";
 import { auth } from "../firebase";
 import { IOS_CLIEND_ID, ANDROID_CLIEND_ID } from '@env'
+import { Alert } from 'react-native';
 
 const AuthContext = createContext({});
 
@@ -33,13 +41,32 @@ export const AuthProvider = ({ children }) => {
         ,
         []);
 
+    const handleSignUp = async (email, password) => {
+        setLoading(true);
+        await createUserWithEmailAndPassword(auth, email, password)
+            .then(async userCredentials => {
+                const user = userCredentials.user;
+                Alert.alert('Registered with:', user.email);
+            })
+            .catch((e) => Alert.alert(e.message)).finally(() => setLoading(false));
+    }
+
+    const handleLogin = async (email, password) => {
+        setLoading(true);
+        await signInWithEmailAndPassword(auth, email, password)
+            .then(async userCredentials => {
+                const user = userCredentials.user;
+                Alert.alert('Logged in with:', user.email);
+            })
+            .catch((e) => Alert.alert(e.message)).finally(() => setLoading(false));
+    }
+
     const signInWithGoogle = async () => {
         setLoading(true);
         await Google.logInAsync(config).then(async (logInResult) => {
             if (logInResult.type === "success") {
                 const { idToken, accessToken } = logInResult;
                 const credential = GoogleAuthProvider.credential(idToken, accessToken);
-
                 await signInWithCredential(auth, credential);
             }
             return Promise.reject();
@@ -57,6 +84,8 @@ export const AuthProvider = ({ children }) => {
         error,
         logOut,
         signInWithGoogle,
+        handleSignUp,
+        handleLogin
     }), [user, loading, error]);
 
     return (
