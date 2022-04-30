@@ -8,9 +8,11 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword
 } from "@firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { IOS_CLIEND_ID, ANDROID_CLIEND_ID } from '@env'
 import { Alert } from 'react-native';
+import { doc, getDoc } from "firebase/firestore";
+import { deleteUser } from "firebase/auth";
 
 const AuthContext = createContext({});
 
@@ -24,6 +26,7 @@ const config = {
 export const AuthProvider = ({ children }) => {
     const [error, serError] = useState(null);
     const [user, setUser] = useState(null);
+    const [registered, setRegistered] = useState(false);
     const [loadingInitial, setLoadingInitial] = useState(true);
     const [loading, setLoading] = useState(false)
 
@@ -32,6 +35,7 @@ export const AuthProvider = ({ children }) => {
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     setUser(user);
+                    verifyRegistration(user);
                 }
                 else {
                     setUser(null);
@@ -46,7 +50,6 @@ export const AuthProvider = ({ children }) => {
         await createUserWithEmailAndPassword(auth, email, password)
             .then(async userCredentials => {
                 const user = userCredentials.user;
-                Alert.alert('Registered with:', user.email);
             })
             .catch((e) => Alert.alert(e.message)).finally(() => setLoading(false));
     }
@@ -56,7 +59,6 @@ export const AuthProvider = ({ children }) => {
         await signInWithEmailAndPassword(auth, email, password)
             .then(async userCredentials => {
                 const user = userCredentials.user;
-                Alert.alert('Logged in with:', user.email);
             })
             .catch((e) => Alert.alert(e.message)).finally(() => setLoading(false));
     }
@@ -67,7 +69,7 @@ export const AuthProvider = ({ children }) => {
             if (logInResult.type === "success") {
                 const { idToken, accessToken } = logInResult;
                 const credential = GoogleAuthProvider.credential(idToken, accessToken);
-                await signInWithCredential(auth, credential);
+                await signInWithCredential(auth, credential)
             }
             return Promise.reject();
         }).catch((e) => serError(e)).finally(() => setLoading(false));
@@ -78,15 +80,39 @@ export const AuthProvider = ({ children }) => {
         signOut(auth).catch((e) => serError(e)).finally(() => setLoading(false));
     };
 
+    const cancel = async () => {
+        logOut();
+        deleteUser(user).then(() => {
+            Alert.alert("Registration cancelled");
+        }).catch((error) => {
+            Alert.alert(error);
+        });
+    }
+
+    const verifyRegistration = async (user) => {
+        setLoading(true);
+        const docRef = doc(db, "users", user.email);
+        await getDoc(docRef).then(async (doc) => {
+            if (doc.exists()) {
+                setRegistered(true);
+            } else {
+                setRegistered(false);
+            }
+        }).catch((e) => serError(e)).finally(() => setLoading(false));
+    };
+
     const memoedValue = useMemo(() => ({
         user,
+        registered,
         loading,
         error,
         logOut,
         signInWithGoogle,
         handleSignUp,
-        handleLogin
-    }), [user, loading, error]);
+        handleLogin,
+        setRegistered,
+        cancel
+    }), [user, registered, loading, error]);
 
     return (
         <AuthContext.Provider value={memoedValue}>

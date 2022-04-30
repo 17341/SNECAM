@@ -1,24 +1,37 @@
 import React from "react";
-import { View, Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import HomeScreen from "./screens/HomeScreen";
-import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
+import LandingScreen from "./screens/LandingScreen";
+import SignUpScreen from "./screens/SignUpScreen";
+import HomeScreen from "./screens/HomeScreen";
 import useAuth from "./hooks/useAuth";
+import LoadingScreen from "./screens/LoadingScreen";
+import ImageScreen from "./screens/ImageScreen";
 
 const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
-    const { user } = useAuth();
-
+    const { user, registered, loading } = useAuth();
     return (
-        <Stack.Navigator>
-            {user ? (
-                <Stack.Screen name="Home" component={HomeScreen} />
-            ) : (
-                <Stack.Screen name="Login" component={LoginScreen} />
-            )}
-            <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Navigator screenOptions={{
+            headerShown: false
+        }}
+            initialRouteName="Loading"
+        >
+            {loading ? <Stack.Screen name="Loading" component={LoadingScreen} />
+                : user ? (
+                    registered ? <>
+                        <Stack.Screen name="Home" component={HomeScreen} />
+                        <Stack.Screen name="ImageScreen" component={ImageScreen} />
+                    </>
+                        : <Stack.Screen name="Register" component={RegisterScreen} />
+                ) : (
+                    <>
+                        <Stack.Screen name="Login" component={LandingScreen} />
+                        <Stack.Screen name="SignUp" component={SignUpScreen} />
+                    </>
+                )
+            }
         </Stack.Navigator>
     );
 };
