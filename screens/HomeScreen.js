@@ -1,25 +1,39 @@
-import { KeyboardAvoidingView, TextInput, View, SafeAreaView, Text, TouchableOpacity, Platform, StatusBar } from 'react-native'
+import { KeyboardAvoidingView, TextInput, View, Text, TouchableOpacity, Platform, StatusBar } from 'react-native'
 import React from 'react'
 import useAuth from '../hooks/useAuth'
 import styles from '../styles'
-import { getCollection } from '../hooks/handleFetch'
 import Posts from '../components/Posts'
-import { SearchBar } from 'react-native-elements';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/core'
+import { getCollection } from '../hooks/handleFetch';
+
+import { collection, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { db, storage } from "../firebase";
 
 const HomeScreen = () => {
+    const navigation = useNavigation();
     const { logOut, user } = useAuth();
-    const [search, setSearch] = React.useState(null);
+    const [friends, setFriends] = React.useState([])
+    const [userData, setUserData] = React.useState("")
 
-    // getCollection("users").then((querySnapshot) => {
-    //     querySnapshot.forEach((doc) => {
-    //         console.log(doc.id, "=> ", doc.data());
-    //     });
-    // });
+    React.useEffect(() => {
+        // getCollection("users").then((querySnapshot) => {
+        //     querySnapshot.forEach((doc) => {
+        //         if (doc.id === user.email) {
+        //             setFriends(doc.data().friends)
+        //             setUserData(doc)
+        //         }
+        //     });
+        // });
+        onSnapshot(collection(db, "users"), (snapshot) => {
+            snapshot.forEach((doc) => {
+                if (doc.id === user.email) {
+                    setFriends(doc.data().friends)
+                    setUserData(doc)
+                }
+            });
+        })
+    }, []);
 
-    const updateSearch = (search) => {
-        setSearch(search);
-    };
 
     return (
         <KeyboardAvoidingView
@@ -28,18 +42,23 @@ const HomeScreen = () => {
         >
             <KeyboardAvoidingView style={styles.header}>
                 <TouchableOpacity
+                    onPress={() => navigation.navigate('UserProfile', {
+                        user: userData, me: true
+                    })}
                     style={[{ justifyContent: "center", alignItems: "center", backgroundColor: "gray", width: "20%", height: "100%" }]}
                 >
                     <Text style={styles.buttonText}>Account</Text>
                 </TouchableOpacity>
-                <View style={[{ width: "50%", height: "100%" }]}>
-                    <TextInput
-                        placeholder="Search users"
-                        value={search}
-                        onChangeText={text => setSearch(text)}
-                        style={{ backgroundColor: 'white', height: "100%" }}
-                    />
-                </View>
+                <TouchableOpacity
+                    onPress={() =>
+                        navigation.navigate("SearchUser", {
+                            friends: friends
+                        })
+                    }
+                    style={[{ justifyContent: "center", alignItems: "center", width: "60%", height: "100%" }]}
+                >
+                    <Text >Search users</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                     onPress={logOut}
                     style={[{ justifyContent: "center", alignItems: "center", backgroundColor: "red", width: "20%", height: "100%" }]}
@@ -48,8 +67,9 @@ const HomeScreen = () => {
                 </TouchableOpacity>
             </KeyboardAvoidingView>
             <View style={styles.homeBody}>
-                <Posts />
+                <Posts users={friends} />
             </View>
+
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={{
@@ -57,6 +77,9 @@ const HomeScreen = () => {
                         backgroundColor: "green",
                         alignItems: 'center', width: "100%", height: "100%"
                     }}
+                    onPress={() =>
+                        navigation.navigate("AddPost")
+                    }
                 >
                     <Text style={[styles.buttonText]}>Add Post</Text>
                 </TouchableOpacity>

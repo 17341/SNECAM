@@ -32,6 +32,13 @@ export default styles = StyleSheet.create({
         justifyContent: 'space-between',
         flexDirection: "row"
     },
+    userSearch: {
+        flex: 1,
+        justifyContent: 'space-between',
+        flexDirection: "row",
+        backgroundColor: "white",
+        width: "80%"
+    },
     postContainer: {
         flex: 1,
         justifyContent: 'space-between',
@@ -64,6 +71,14 @@ export default styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 10,
         marginTop: 5,
+    },
+    search: {
+        backgroundColor: 'white',
+        height: 40,
+        width: "90%",
+        margin: 12,
+        borderRadius: 10,
+        padding: 10,
     },
     buttonContainer: {
         width: '60%',

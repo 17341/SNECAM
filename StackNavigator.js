@@ -7,6 +7,9 @@ import HomeScreen from "./screens/HomeScreen";
 import useAuth from "./hooks/useAuth";
 import LoadingScreen from "./screens/LoadingScreen";
 import ImageScreen from "./screens/ImageScreen";
+import AddPostScreen from "./screens/AddPostScreen";
+import SearchUserScreen from "./screens/SearchUserScreen";
+import UserProfileScreen from "./screens/UserProfile";
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +26,9 @@ const StackNavigator = () => {
                     registered ? <>
                         <Stack.Screen name="Home" component={HomeScreen} />
                         <Stack.Screen name="ImageScreen" component={ImageScreen} />
+                        <Stack.Screen name="AddPost" component={AddPostScreen} />
+                        <Stack.Screen name="SearchUser" component={SearchUserScreen} />
+                        <Stack.Screen name="UserProfile" component={UserProfileScreen} />
                     </>
                         : <Stack.Screen name="Register" component={RegisterScreen} />
                 ) : (

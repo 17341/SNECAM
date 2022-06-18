@@ -1,34 +1,55 @@
-import { ScrollView, Text } from 'react-native'
+import { RefreshControl, ScrollView, Text, TouchableOpacity } from 'react-native'
 import React from 'react'
 import Post from './Post'
+import { getCollection } from '../hooks/handleFetch'
+import { collection, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { db, storage } from "../firebase";
+import useAuth from '../hooks/useAuth'
 
-const Posts = () => {
-    let posts = [{
-        title: 'ad',
-        createdAt: '30/04/2022',
-        updatedAt: '2',
-        content: {
-            photo: '',
-            text: 'EAEAEA'
-        },
-        likedBy: [],
-        uploadedBy: "ranim@ecam.be"
-    }, {
-        title: 'é',
-        createdAt: '30/04/2022',
-        updatedAt: '3',
-        content: {
-            photo: '',
-            text: 'DADAFA'
-        },
-        likedBy: [],
-        uploadedBy: "17341@ecam.be"
-    }];
+
+const Posts = (users) => {
+    const { user } = useAuth();
+    const [posts, setPosts] = React.useState([]);
+    const [refresh, setRefresh] = React.useState(true);
+    React.useEffect(() => {
+
+        onSnapshot(collection(db, "posts"), (snapshot) => {
+            setPosts(snapshot.docs.filter((doc) => users.users.includes(doc.data().createdBy)).reverse())
+        }
+
+        )
+        setRefresh(false)
+        // getCollection("posts").then((querySnapshot) => {
+        //     let data = []
+        //     querySnapshot.forEach((doc) => {
+        //         if (users.users.includes(doc.data().createdBy)) {
+        //             data.push(doc)
+        //         }
+        //     });
+        //     setPosts(data);
+        // });
+
+    }, [refresh]);
+
+    const wait = (timeout) => {
+        return new Promise(resolve => setTimeout(resolve, timeout));
+    }
+    const onRefresh = React.useCallback(() => {
+        setRefresh(true);
+        wait(2000).then(() => setRefresh(false));
+    }, []);
 
     return (
-        <ScrollView>
-            {posts.map((post) =>
-                <Post data={post} />)
+
+        <ScrollView refreshControl={
+            <RefreshControl
+                refreshing={refresh}
+                onRefresh={onRefresh}
+            />
+        }>
+            {posts.length > 0 ? posts.map((post) =>
+                <Post data={post} />) :
+                <Text>No posts :( </Text>
             }
         </ScrollView>
     )

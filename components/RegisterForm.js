@@ -6,10 +6,11 @@ import useAuth from '../hooks/useAuth'
 import { addUser } from "../hooks/handleAdd"
 
 const RegisterForm = () => {
-    const { user, setRegistered } = useAuth();
+    const { setRegistered, user } = useAuth();
 
     const handleSubmit = (values) => {
         let ready = true;
+        //TODO : Fix for loop
         for (const key of Object.keys(values)) {
             if (values[key].length === 0) {
                 Alert.alert("Please complete all fields!");
@@ -20,7 +21,7 @@ const RegisterForm = () => {
         if (ready) {
             values.friends = [];
             values.posts = [];
-            addUser(values).then(() => {
+            addUser(values, user.email).then(() => {
                 setRegistered(true);
             });
         }
